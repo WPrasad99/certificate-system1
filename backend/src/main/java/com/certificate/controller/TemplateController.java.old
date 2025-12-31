@@ -1,0 +1,43 @@
+package com.certificate.controller;
+
+import com.certificate.entity.CertificateTemplate;
+import com.certificate.service.TemplateService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+@RestController
+@RequestMapping("/events/{eventId}/template")
+@RequiredArgsConstructor
+public class TemplateController {
+
+    private final TemplateService templateService;
+
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadTemplate(
+            @PathVariable Long eventId,
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) throws IOException {
+        templateService.uploadTemplate(eventId, authentication.getName(), file);
+        return ResponseEntity.ok("Template uploaded successfully");
+    }
+
+    @GetMapping
+    public ResponseEntity<CertificateTemplate> getTemplate(
+            @PathVariable Long eventId,
+            Authentication authentication) {
+        return ResponseEntity.ok(templateService.getTemplate(eventId, authentication.getName()));
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteTemplate(
+            @PathVariable Long eventId,
+            Authentication authentication) {
+        templateService.deleteTemplate(eventId, authentication.getName());
+        return ResponseEntity.ok("Template deleted successfully");
+    }
+}

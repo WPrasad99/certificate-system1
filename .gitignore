@@ -1,0 +1,45 @@
+# Backend
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/.settings/
+backend/.project
+backend/.classpath
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Environment files (keep .example files, exclude actual .env)
+.env
+.env.local
+.env.production
+backend/.env
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+
+# Certificates (generated files)
+certificates/
+*.pdf
+*.png
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~

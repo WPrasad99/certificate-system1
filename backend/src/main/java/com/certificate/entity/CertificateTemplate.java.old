@@ -1,0 +1,34 @@
+package com.certificate.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "certificate_templates")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CertificateTemplate {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "event_id", unique = true)
+    private Long eventId;
+
+    @Column(name = "template_name")
+    private String templateName;
+
+    @Lob
+    @Column(name = "html_content", columnDefinition = "TEXT")
+    private String htmlContent;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+}

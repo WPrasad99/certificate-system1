@@ -1,0 +1,233 @@
+package com.certificate.service;
+
+import com.certificate.dto.CertificateStatusDTO;
+import com.certificate.entity.Certificate;
+import com.certificate.entity.Event;
+import com.certificate.entity.Participant;
+import com.certificate.repository.CertificateRepository;
+import com.certificate.repository.ParticipantRepository;
+import com.certificate.util.PdfGeneratorUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.mail.internet.MimeMessage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CertificateService {
+
+    private final CertificateRepository certificateRepository;
+    private final ParticipantRepository participantRepository;
+    private final EventService eventService;
+    private final PdfGeneratorUtil pdfGeneratorUtil;
+    private final JavaMailSender mailSender;
+    private final com.certificate.repository.CertificateTemplateRepository templateRepository;
+
+    @Transactional
+    public void generateCertificates(Long eventId, String email) {
+        Event event = eventService.getEventById(eventId, email);
+        List<Participant> participants = participantRepository.findByEventId(eventId);
+
+        if (participants.isEmpty()) {
+            throw new RuntimeException("No participants found for this event");
+        }
+
+        // Check for custom template
+        String templateHtml = templateRepository.findByEventId(eventId)
+                .map(com.certificate.entity.CertificateTemplate::getHtmlContent)
+                .orElse(null);
+
+        // Delete existing certificates
+        certificateRepository.deleteByEventId(eventId);
+
+        for (Participant participant : participants) {
+            Certificate certificate = new Certificate();
+            certificate.setParticipantId(participant.getId());
+            certificate.setEventId(eventId);
+            certificate.setGenerationStatus("PENDING");
+
+            try {
+                String filePath = pdfGeneratorUtil.generateCertificate(participant.getName(), event, templateHtml);
+                certificate.setFilePath(filePath);
+                certificate.setGenerationStatus("GENERATED");
+                certificate.setGeneratedAt(LocalDateTime.now());
+            } catch (Exception e) {
+                log.error("Failed to generate certificate for participant: " + participant.getId(), e);
+                certificate.setGenerationStatus("FAILED");
+                certificate.setErrorMessage(e.getMessage());
+            }
+
+            certificateRepository.save(certificate);
+        }
+    }
+
+    public List<CertificateStatusDTO> getCertificateStatus(Long eventId, String email) {
+        eventService.getEventById(eventId, email);
+
+        List<Certificate> certificates = certificateRepository.findByEventId(eventId);
+        List<Participant> participants = participantRepository.findByEventId(eventId);
+
+        return participants.stream()
+                .map(participant -> {
+                    Certificate cert = certificates.stream()
+                            .filter(c -> c.getParticipantId().equals(participant.getId()))
+                            .findFirst()
+                            .orElse(null);
+
+                    CertificateStatusDTO dto = new CertificateStatusDTO();
+                    dto.setParticipantName(participant.getName());
+                    dto.setEmail(participant.getEmail());
+
+                    if (cert != null) {
+                        dto.setId(cert.getId());
+                        dto.setGenerationStatus(cert.getGenerationStatus());
+                        dto.setEmailStatus(cert.getEmailStatus());
+                        dto.setErrorMessage(cert.getErrorMessage());
+                    } else {
+                        dto.setGenerationStatus("NOT_GENERATED");
+                        dto.setEmailStatus("NOT_SENT");
+                    }
+
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public Resource downloadCertificate(Long certificateId, String email) throws Exception {
+        Certificate certificate = certificateRepository.findById(certificateId)
+                .orElseThrow(() -> new RuntimeException("Certificate not found"));
+
+        eventService.getEventById(certificate.getEventId(), email);
+
+        if (!"GENERATED".equals(certificate.getGenerationStatus())) {
+            throw new RuntimeException("Certificate not yet generated");
+        }
+
+        File file = new File(certificate.getFilePath());
+        if (!file.exists()) {
+            throw new RuntimeException("Certificate file not found");
+        }
+
+        byte[] data = Files.readAllBytes(file.toPath());
+        return new ByteArrayResource(data);
+    }
+
+    public Resource downloadAllCertificates(Long eventId, String email) throws Exception {
+        eventService.getEventById(eventId, email);
+
+        List<Certificate> certificates = certificateRepository.findByEventId(eventId)
+                .stream()
+                .filter(c -> "GENERATED".equals(c.getGenerationStatus()))
+                .collect(Collectors.toList());
+
+        if (certificates.isEmpty()) {
+            throw new RuntimeException("No certificates available for download");
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            for (Certificate cert : certificates) {
+                File file = new File(cert.getFilePath());
+                if (file.exists()) {
+                    ZipEntry zipEntry = new ZipEntry(file.getName());
+                    zos.putNextEntry(zipEntry);
+
+                    try (FileInputStream fis = new FileInputStream(file)) {
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        while ((length = fis.read(buffer)) > 0) {
+                            zos.write(buffer, 0, length);
+                        }
+                    }
+
+                    zos.closeEntry();
+                }
+            }
+        }
+
+        return new ByteArrayResource(baos.toByteArray());
+    }
+
+    public void sendCertificateByEmail(Long certificateId, String organizerEmail) {
+        Certificate certificate = certificateRepository.findById(certificateId)
+                .orElseThrow(() -> new RuntimeException("Certificate not found"));
+
+        eventService.getEventById(certificate.getEventId(), organizerEmail);
+
+        Participant participant = participantRepository.findById(certificate.getParticipantId())
+                .orElseThrow(() -> new RuntimeException("Participant not found"));
+
+        try {
+            sendEmail(participant, certificate);
+            certificate.setEmailStatus("SENT");
+            certificate.setEmailSentAt(LocalDateTime.now());
+        } catch (Exception e) {
+            log.error("Failed to send email to: " + participant.getEmail(), e);
+            certificate.setEmailStatus("FAILED");
+            certificate.setErrorMessage(e.getMessage());
+        }
+
+        certificateRepository.save(certificate);
+    }
+
+    public void sendAllCertificates(Long eventId, String organizerEmail) {
+        eventService.getEventById(eventId, organizerEmail);
+
+        List<Certificate> certificates = certificateRepository.findByEventId(eventId)
+                .stream()
+                .filter(c -> "GENERATED".equals(c.getGenerationStatus()))
+                .collect(Collectors.toList());
+
+        for (Certificate certificate : certificates) {
+            Participant participant = participantRepository.findById(certificate.getParticipantId())
+                    .orElse(null);
+
+            if (participant != null) {
+                try {
+                    sendEmail(participant, certificate);
+                    certificate.setEmailStatus("SENT");
+                    certificate.setEmailSentAt(LocalDateTime.now());
+                } catch (Exception e) {
+                    log.error("Failed to send email to: " + participant.getEmail(), e);
+                    certificate.setEmailStatus("FAILED");
+                    certificate.setErrorMessage(e.getMessage());
+                }
+
+                certificateRepository.save(certificate);
+            }
+        }
+    }
+
+    private void sendEmail(Participant participant, Certificate certificate) throws Exception {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setTo(participant.getEmail());
+        helper.setSubject("Your Certificate of Participation");
+        helper.setText("Dear " + participant.getName() + ",\n\n" +
+                "Please find attached your certificate of participation.\n\n" +
+                "Best regards,\n" +
+                "Event Organizer");
+
+        File certificateFile = new File(certificate.getFilePath());
+        helper.addAttachment(certificateFile.getName(), certificateFile);
+
+        mailSender.send(message);
+    }
+}

@@ -1,0 +1,202 @@
+.verification-container {
+    min-height: 100vh;
+    background: #f8f9fa;
+    /* Clean light gray */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.verification-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    /* Subtle smooth shadow */
+    padding: 0;
+    max-width: 900px;
+    width: 100%;
+    display: flex;
+    /* Landscape layout */
+    overflow: hidden;
+    border: 1px solid #edf2f7;
+}
+
+/* Left Section: Logo & Status */
+.card-left {
+    flex: 0 0 40%;
+    background: #ffffff;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    /* Align to left */
+    justify-content: center;
+    border-right: 1px solid #f1f5f9;
+    text-align: left;
+    /* Align text to left */
+    position: relative;
+}
+
+/* Right Section: Details */
+.card-right {
+    flex: 1;
+    padding: 64px 48px 48px 48px;
+    /* Increased top padding to shift content down */
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* Center content within the padded area */
+}
+
+.logo-container img {
+    width: 320px;
+    /* Increased from 260px */
+    height: auto;
+    margin-bottom: 24px;
+}
+
+.university-info {
+    margin-top: 20px;
+    padding: 0;
+    /* Removed padding */
+}
+
+.university-description {
+    font-size: 15px;
+    /* Increased from 13px */
+    line-height: 1.6;
+    color: #64748b;
+    font-style: italic;
+    text-align: justify;
+    /* Optional: makes the long description look cleaner */
+}
+
+.trusted-text-container {
+    margin-top: auto;
+    /* Pushes to bottom */
+    padding-top: 32px;
+    width: 100%;
+}
+
+.trusted-text-container p {
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.verification-status h1 {
+    font-size: 24px;
+    color: #1a202c;
+    margin: 32px 0 8px 0;
+    /* Extra spacing from logo */
+    font-weight: 700;
+}
+
+.verification-status p {
+    color: #718096;
+    font-size: 14px;
+}
+
+.error-badge {
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 6px 16px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 16px;
+    border: 1px solid #fee2e2;
+}
+
+/* Right Side Details */
+.detail-group {
+    margin-bottom: 24px;
+}
+
+.detail-label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.detail-value {
+    display: block;
+    font-size: 16px;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.detail-value.highlight {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.verification-id {
+    font-family: 'Courier New', monospace;
+    background: #f1f5f9;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #475569;
+}
+
+.verification-footer {
+    margin-top: 32px;
+    font-size: 12px;
+    color: #cbd5e1;
+    text-align: right;
+}
+
+/* Loader */
+.loader-container {
+    padding: 60px;
+    text-align: center;
+}
+
+.loader {
+    border: 3px solid #f3f4f6;
+    border-top: 3px solid #6366f1;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .verification-card {
+        flex-direction: column;
+        max-width: 400px;
+    }
+
+    .card-left {
+        border-right: none;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 32px;
+    }
+
+    .card-right {
+        padding: 32px;
+    }
+
+    .verification-footer {
+        text-align: center;
+    }
+}

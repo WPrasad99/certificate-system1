@@ -1,0 +1,48 @@
+package com.certificate.service;
+
+import com.certificate.entity.CertificateTemplate;
+import com.certificate.repository.CertificateTemplateRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+@Service
+@RequiredArgsConstructor
+public class TemplateService {
+
+    private final CertificateTemplateRepository templateRepository;
+    private final EventService eventService;
+
+    @Transactional
+    public void uploadTemplate(Long eventId, String email, MultipartFile file) throws IOException {
+        // Verify event ownership
+        eventService.getEventById(eventId, email);
+
+        String content = new String(file.getBytes(), StandardCharsets.UTF_8);
+
+        CertificateTemplate template = templateRepository.findByEventId(eventId)
+                .orElse(new CertificateTemplate());
+
+        template.setEventId(eventId);
+        template.setTemplateName(file.getOriginalFilename());
+        template.setHtmlContent(content);
+
+        templateRepository.save(template);
+    }
+
+    public CertificateTemplate getTemplate(Long eventId, String email) {
+        eventService.getEventById(eventId, email);
+        return templateRepository.findByEventId(eventId)
+                .orElseThrow(() -> new RuntimeException("Template not found for this event"));
+    }
+
+    @Transactional
+    public void deleteTemplate(Long eventId, String email) {
+        eventService.getEventById(eventId, email);
+        templateRepository.deleteByEventId(eventId);
+    }
+}

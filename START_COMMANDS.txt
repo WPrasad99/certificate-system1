@@ -1,0 +1,52 @@
+# 🚀 Quick Start Commands
+
+## Start Services (2 Terminals)
+
+### Terminal 1 - Backend
+```powershell
+cd C:\Users\Pratamesh\OneDrive\Desktop\gdghackathon\certificate-system\backend
+mvn spring-boot:run
+```
+Wait for: `Started CertificateApplication`
+
+### Terminal 2 - Frontend  
+```powershell
+cd C:\Users\Pratamesh\OneDrive\Desktop\gdghackathon\certificate-system\frontend
+npm run dev
+```
+Wait for: `Local: http://localhost:5173/`
+
+---
+
+## Stop Services
+- Press **Ctrl + C** in each terminal
+
+---
+
+## Restart Backend (After config changes)
+```powershell
+# In backend terminal:
+Ctrl + C              # Stop
+mvn spring-boot:run   # Start again
+```
+
+---
+
+## Access Application
+Open browser: **http://localhost:5173**
+
+---
+
+## Current Status
+✅ Both services are already running!
+- Backend: 35+ min uptime
+- Frontend: 48+ min uptime
+
+**You don't need to restart** unless you:
+- Changed `application.properties`
+- Want to stop for the day
+- Something crashed
+
+---
+
+See **MANUAL_START_GUIDE.md** for detailed instructions!

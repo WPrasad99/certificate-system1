@@ -1,0 +1,37 @@
+/* Analytics Chart Styling */
+.analytics-section {
+    margin: 48px 0;
+}
+
+.analytics-section.single-chart {
+    display: block;
+}
+
+.chart-card {
+    background: white;
+    padding: 32px 24px;
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.chart-card h4 {
+    color: #1e293b;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 24px 0;
+    text-align: center;
+    text-transform: none;
+}
+
+.activity-card {
+    background: white;
+}
+
+/* Mobile responsiveness for charts */
+@media (max-width: 768px) {
+    .chart-card {
+        padding: 20px 16px;
+        overflow-x: auto;
+    }
+}
