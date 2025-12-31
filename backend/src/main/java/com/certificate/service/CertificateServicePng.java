@@ -95,7 +95,6 @@ public class CertificateServicePng {
 
             try {
                 // Generate QR code with verification URL
-                String baseUrl = getLocalVerificationUrl();
                 String verificationUrl = baseUrl + "/verify/" + verificationId;
                 java.awt.image.BufferedImage qrCode = qrCodeGenerator.generateQRCode(verificationUrl, 200, 200);
 
