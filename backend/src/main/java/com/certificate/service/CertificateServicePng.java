@@ -60,8 +60,8 @@ public class CertificateServicePng {
                 .map(Template::getImageData)
                 .orElse(null);
 
-        // Get the frontend URL for QR code verification
-        String baseUrl = getVerificationUrl();
+        // Get local IP for QR code verification URL
+        String baseUrl = getLocalVerificationUrl();
 
         // Find existing certificates for this event to check for already generated ones
         List<Certificate> existingCertificates = certificateRepository.findByEventId(eventId);
@@ -95,7 +95,7 @@ public class CertificateServicePng {
 
             try {
                 // Generate QR code with verification URL
-                String baseUrl = getVerificationUrl();
+                String baseUrl = getLocalVerificationUrl();
                 String verificationUrl = baseUrl + "/verify/" + verificationId;
                 java.awt.image.BufferedImage qrCode = qrCodeGenerator.generateQRCode(verificationUrl, 200, 200);
 
@@ -122,18 +122,40 @@ public class CertificateServicePng {
         }
     }
 
-    @org.springframework.beans.factory.annotation.Value("${frontend.url:http://localhost:5173}")
-    private String frontendUrl;
-
     /**
-     * Get the verification URL for QR codes (configurable for production)
+     * Get the local network verification URL (points to frontend)
      */
-    private String getVerificationUrl() {
-        // Use configured frontend URL from environment variable
-        // In production, set FRONTEND_URL environment variable to your deployed
-        // frontend
-        log.info("Using frontend URL for QR codes: {}", frontendUrl);
-        return frontendUrl;
+    private String getLocalVerificationUrl() {
+        try {
+            // Iterate through network interfaces to find the correct local IP
+            java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface
+                    .getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                java.net.NetworkInterface iface = interfaces.nextElement();
+                // Skip loopback and inactive interfaces
+                if (iface.isLoopback() || !iface.isUp() || iface.isVirtual())
+                    continue;
+
+                java.util.Enumeration<java.net.InetAddress> addresses = iface.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    java.net.InetAddress addr = addresses.nextElement();
+                    // Check for IPv4 and site local address (192.168.x.x, 10.x.x.x, etc.)
+                    if (addr instanceof java.net.Inet4Address && !addr.isLoopbackAddress()
+                            && addr.isSiteLocalAddress()) {
+                        String ip = addr.getHostAddress();
+                        log.info("Found local network IP: {}", ip);
+                        return "http://" + ip + ":5173";
+                    }
+                }
+            }
+            // Fallback
+            String ip = java.net.InetAddress.getLocalHost().getHostAddress();
+            log.info("Fallback to local host IP: {}", ip);
+            return "http://" + ip + ":5173";
+        } catch (Exception e) {
+            log.error("Failed to get local IP", e);
+            return "http://localhost:5173";
+        }
     }
 
     public List<CertificateStatusDTO> getCertificateStatus(Long eventId, String email) {
