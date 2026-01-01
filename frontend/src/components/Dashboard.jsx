@@ -74,11 +74,15 @@ function Dashboard() {
 
                     // Add to notifications list if not already present
                     setNotifications(prev => {
-                        if (prev.some(n => n.id === msg.id || n.msgId === msg.id)) return prev;
+                        const uniqueId = msg.id;
+                        const dismissed = JSON.parse(localStorage.getItem('dismissed_notif_ids') || '[]');
+                        if (dismissed.includes(uniqueId)) return prev;
+
+                        if (prev.some(n => n.id === uniqueId || n.msgId === uniqueId)) return prev;
 
                         const newNotif = {
-                            id: msg.id,
-                            msgId: msg.id,
+                            id: uniqueId,
+                            msgId: uniqueId,
                             type: 'info',
                             message: `New message from ${msg.senderName}: ${msg.content.substring(0, 30)}${msg.content.length > 30 ? '...' : ''}`,
                             time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -106,6 +110,9 @@ function Dashboard() {
 
                     setNotifications(prev => {
                         const uniqueId = `req_${req.id}_${req.status}`;
+                        const dismissed = JSON.parse(localStorage.getItem('dismissed_notif_ids') || '[]');
+                        if (dismissed.includes(uniqueId)) return prev;
+
                         if (prev.some(n => n.id === uniqueId)) return prev;
 
                         const newNotif = {
@@ -135,15 +142,19 @@ function Dashboard() {
                     const alreadyToastShown = localStorage.getItem(notifKey);
 
                     setNotifications(prev => {
-                        if (prev.some(n => n.id === `log_${log.id}`)) return prev;
+                        const uniqueId = `log_${log.id}`;
+                        const dismissed = JSON.parse(localStorage.getItem('dismissed_notif_ids') || '[]');
+                        if (dismissed.includes(uniqueId)) return prev;
+
+                        if (prev.some(n => n.id === uniqueId)) return prev;
 
                         const newNotif = {
-                            id: `log_${log.id}`,
+                            id: uniqueId,
                             type: 'info',
-                            message: `${log.userName}: ${log.action.replace(/_/g, ' ')}`,
-                            time: 'Log',
+                            message: `${log.userName} ${log.actionType.toLowerCase().replace('_', ' ')} ${log.details}`,
+                            time: new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                             eventId: log.eventId,
-                            targetTab: 'team'
+                            targetTab: log.details.toLowerCase().includes('participant') ? 'participants' : 'team'
                         };
 
                         if (!alreadyToastShown) {
@@ -234,6 +245,13 @@ function Dashboard() {
     const handleDismissNotification = (e, id) => {
         e.stopPropagation();
         setNotifications(prev => prev.filter(n => n.id !== id));
+
+        // Persist dismissal
+        const dismissed = JSON.parse(localStorage.getItem('dismissed_notif_ids') || '[]');
+        if (!dismissed.includes(id)) {
+            dismissed.push(id);
+            localStorage.setItem('dismissed_notif_ids', JSON.stringify(dismissed));
+        }
     };
 
     const handleEventSelect = (event) => {
