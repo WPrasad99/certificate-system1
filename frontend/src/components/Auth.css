@@ -214,12 +214,14 @@
     font-weight: 800;
     color: #0f172a;
     margin: 0 0 6px 0;
+    text-align: left;
 }
 
 .auth-subtitle {
     color: #64748b;
     font-size: 15px;
     margin: 0 0 12px 0;
+    text-align: left;
 }
 
 /* Form Elements */
