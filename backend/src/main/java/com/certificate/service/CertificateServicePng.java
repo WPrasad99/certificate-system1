@@ -12,17 +12,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.mail.internet.MimeMessage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -194,7 +190,7 @@ public class CertificateServicePng {
         Certificate certificate = certificateRepository.findById(certificateId)
                 .orElseThrow(() -> new RuntimeException("Certificate not found"));
 
-        Event event = eventService.getEventById(certificate.getEventId(), email);
+        eventService.getEventById(certificate.getEventId(), email);
 
         try {
             File file = new File(certificate.getFilePath());
@@ -206,7 +202,7 @@ public class CertificateServicePng {
     }
 
     public Resource downloadAllCertificates(Long eventId, String email) {
-        Event event = eventService.getEventById(eventId, email);
+        eventService.getEventById(eventId, email);
         List<Certificate> certificates = certificateRepository.findByEventId(eventId);
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();

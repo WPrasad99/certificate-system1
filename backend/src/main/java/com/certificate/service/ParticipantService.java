@@ -1,7 +1,6 @@
 package com.certificate.service;
 
 import com.certificate.dto.ParticipantDTO;
-import com.certificate.entity.Event;
 import com.certificate.entity.Participant;
 import com.certificate.repository.ParticipantRepository;
 import com.certificate.util.FileParserUtil;
@@ -25,7 +24,7 @@ public class ParticipantService {
     @Transactional
     public List<ParticipantDTO> uploadParticipants(Long eventId, MultipartFile file, String email) throws Exception {
         // Verify event access
-        Event event = eventService.getEventById(eventId, email);
+        eventService.getEventById(eventId, email);
 
         // Parse file
         List<ParticipantDTO> participantDTOs = fileParserUtil.parseFile(file);

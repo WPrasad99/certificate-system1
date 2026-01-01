@@ -1,6 +1,5 @@
 package com.certificate.service;
 
-import com.certificate.entity.Event;
 import com.certificate.entity.Template;
 import com.certificate.repository.TemplateRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,10 +18,9 @@ public class TemplateService {
 
     @Transactional
     public void uploadTemplate(Long eventId, String email, MultipartFile file) throws IOException {
-        Event event = eventService.getEventById(eventId, email);
+        eventService.getEventById(eventId, email);
 
         // Check if file is PNG (by extension or content type)
-        String contentType = file.getContentType();
         String filename = file.getOriginalFilename();
 
         boolean isPngExtension = filename != null && filename.toLowerCase().endsWith(".png");
