@@ -231,6 +231,11 @@ function Dashboard() {
         }
     };
 
+    const handleDismissNotification = (e, id) => {
+        e.stopPropagation();
+        setNotifications(prev => prev.filter(n => n.id !== id));
+    };
+
     const handleEventSelect = (event) => {
         setInitialTab('participants');
         setSelectedEvent(event);
@@ -312,8 +317,19 @@ function Dashboard() {
                                                         className={`notification-item ${notif.type} ${notif.eventId ? 'clickable' : ''}`}
                                                         onClick={() => handleNotificationClick(notif)}
                                                     >
-                                                        <div className="notification-message">{notif.message}</div>
-                                                        <div className="notification-time">{notif.time}</div>
+                                                        <div className="notification-content">
+                                                            <div className="notification-message">{notif.message}</div>
+                                                            <div className="notification-meta">
+                                                                <span className="notification-time">{notif.time}</span>
+                                                                <button
+                                                                    className="dismiss-notif-btn"
+                                                                    onClick={(e) => handleDismissNotification(e, notif.id)}
+                                                                    title="Dismiss"
+                                                                >
+                                                                    <i className="fa-solid fa-xmark"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 ))
                                             )}

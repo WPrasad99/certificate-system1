@@ -187,15 +187,48 @@
     border-left: 4px solid #3b82f6;
 }
 
+.notification-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .notification-message {
     font-size: 0.9rem;
     color: #334155;
-    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.notification-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .notification-time {
     font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.dismiss-notif-btn {
+    background: none;
+    border: none;
     color: #94a3b8;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 1rem;
+}
+
+.dismiss-notif-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    transform: scale(1.1);
 }
 
 /* Main Content Area */
