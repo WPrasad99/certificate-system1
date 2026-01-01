@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { participantService, certificateService } from '../services/authService';
 import './EventManagement.css';
+import CollaboratorsTab from './CollaboratorsTab';
 
 import Toast from './Toast';
 
@@ -302,6 +303,12 @@ function EventManagement({ event, onBack, onNotify }) {
                     >
                         Send Updates
                     </button>
+                    <button
+                        className={`tab ${activeTab === 'team' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('team')}
+                    >
+                        Team
+                    </button>
                 </div>
 
                 {activeTab === 'participants' && (
@@ -335,6 +342,10 @@ function EventManagement({ event, onBack, onNotify }) {
                         participantCount={participants.length}
                         certificateStatus={certificateStatus}
                     />
+                )}
+
+                {activeTab === 'team' && (
+                    <CollaboratorsTab eventId={event.id} />
                 )}
             </div>
         </div>

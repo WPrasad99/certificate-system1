@@ -165,6 +165,43 @@ export const templateService = {
     }
 };
 
+export const collaborationService = {
+    inviteCollaborator: async (eventId, email) => {
+        const response = await api.post(`/events/${eventId}/collaborators/invite`, { email });
+        return response.data;
+    },
+
+    getRequests: async () => {
+        const response = await api.get('/collaboration/requests');
+        return response.data;
+    },
+
+    acceptRequest: async (requestId) => {
+        const response = await api.post(`/collaboration/requests/${requestId}/accept`);
+        return response.data;
+    },
+
+    declineRequest: async (requestId) => {
+        const response = await api.post(`/collaboration/requests/${requestId}/decline`);
+        return response.data;
+    },
+
+    getCollaborators: async (eventId) => {
+        const response = await api.get(`/events/${eventId}/collaborators`);
+        return response.data;
+    },
+
+    removeCollaborator: async (eventId, userId) => {
+        const response = await api.delete(`/events/${eventId}/collaborators/${userId}`);
+        return response.data;
+    },
+
+    searchUsers: async (email) => {
+        const response = await api.get(`/users/search?email=${encodeURIComponent(email)}`);
+        return response.data;
+    }
+};
+
 export const analyticsService = {
     getStats: async () => {
         const response = await api.get('/analytics/stats');

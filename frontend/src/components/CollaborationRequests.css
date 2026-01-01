@@ -1,0 +1,90 @@
+.collaboration-requests-widget {
+    margin-bottom: 30px;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.collaboration-requests-widget h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+}
+
+.requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.request-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border: 2px solid #e3f2fd;
+    border-radius: 8px;
+    background: #f5f9ff;
+    transition: border-color 0.2s;
+}
+
+.request-card:hover {
+    border-color: #90caf9;
+}
+
+.request-info h4 {
+    margin: 0 0 8px 0;
+    color: #1976d2;
+    font-size: 16px;
+}
+
+.request-info p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.request-date {
+    font-size: 12px;
+    color: #999;
+}
+
+.request-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-accept,
+.btn-decline {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-accept {
+    background: #4caf50;
+    color: white;
+}
+
+.btn-accept:hover:not(:disabled) {
+    background: #45a049;
+}
+
+.btn-decline {
+    background: #f44336;
+    color: white;
+}
+
+.btn-decline:hover:not(:disabled) {
+    background: #da190b;
+}
+
+.btn-accept:disabled,
+.btn-decline:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

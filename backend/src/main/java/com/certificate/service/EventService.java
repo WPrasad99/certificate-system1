@@ -22,6 +22,9 @@ public class EventService {
     private final CertificateRepository certificateRepository;
     private final TemplateRepository templateRepository;
     private final AuthService authService;
+    private final CollaborationService collaborationService;
+    private final com.certificate.repository.EventCollaboratorRepository eventCollaboratorRepository;
+    private final com.certificate.repository.CollaborationRequestRepository collaborationRequestRepository;
 
     public Event createEvent(EventRequest request, String email) {
         Organizer organizer = authService.getOrganizerByEmail(email);
@@ -38,7 +41,32 @@ public class EventService {
 
     public List<Event> getAllEvents(String email) {
         Organizer organizer = authService.getOrganizerByEmail(email);
-        return eventRepository.findByOrganizerId(organizer.getId());
+        List<Event> ownedEvents = eventRepository.findByOrganizerId(organizer.getId());
+
+        // Add collaborated events
+        List<Long> collaboratedEventIds = collaborationService.getCollaboratedEventIds(email);
+        List<Event> collaboratedEvents = collaboratedEventIds.stream()
+                .map(eventRepository::findById)
+                .filter(java.util.Optional::isPresent)
+                .map(java.util.Optional::get)
+                .collect(java.util.stream.Collectors.toList());
+
+        // Combine and deduplicate
+        java.util.Set<Long> eventIds = new java.util.HashSet<>();
+        java.util.List<Event> allEvents = new java.util.ArrayList<>();
+
+        for (Event event : ownedEvents) {
+            if (eventIds.add(event.getId())) {
+                allEvents.add(event);
+            }
+        }
+        for (Event event : collaboratedEvents) {
+            if (eventIds.add(event.getId())) {
+                allEvents.add(event);
+            }
+        }
+
+        return allEvents;
     }
 
     public Event getEventById(Long eventId, String email) {
@@ -46,7 +74,12 @@ public class EventService {
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
         Organizer organizer = authService.getOrganizerByEmail(email);
-        if (!event.getOrganizerId().equals(organizer.getId())) {
+
+        // Check if user is owner OR collaborator
+        boolean isOwner = event.getOrganizerId().equals(organizer.getId());
+        boolean isCollaborator = collaborationService.isCollaborator(eventId, email);
+
+        if (!isOwner && !isCollaborator) {
             throw new RuntimeException("Unauthorized access to event");
         }
 
@@ -66,12 +99,24 @@ public class EventService {
 
     @Transactional
     public void deleteEvent(Long eventId, String email) {
-        Event event = getEventById(eventId, email);
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        Organizer organizer = authService.getOrganizerByEmail(email);
+
+        // Only owner can delete (not collaborators)
+        if (!event.getOrganizerId().equals(organizer.getId())) {
+            throw new RuntimeException("Only event owner can delete the event");
+        }
 
         // Manual cascading deletion
         certificateRepository.deleteByEventId(eventId);
         participantRepository.deleteByEventId(eventId);
         templateRepository.deleteAll(templateRepository.findByEventId(eventId).stream().toList());
+
+        // Delete collaboration data
+        eventCollaboratorRepository.findByEventId(eventId).forEach(eventCollaboratorRepository::delete);
+        collaborationRequestRepository.findByEventId(eventId).forEach(collaborationRequestRepository::delete);
 
         eventRepository.delete(event);
     }

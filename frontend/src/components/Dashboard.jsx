@@ -4,6 +4,7 @@ import { authService, eventService, analyticsService } from '../services/authSer
 import EventManagement from './EventManagement';
 import Modal from './Modal';
 import AnalyticsCharts from './AnalyticsCharts';
+import CollaborationRequests from './CollaborationRequests';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -170,6 +171,8 @@ function Dashboard() {
                         <div className="stats-value">{stats.totalCertificates}</div>
                     </div>
                 </div>
+
+                <CollaborationRequests />
 
                 <AnalyticsCharts stats={stats} events={events} />
             </div>
