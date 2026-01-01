@@ -61,9 +61,9 @@ function Login() {
     return (
         <div className="auth-container">
             {showRedirectLoading && <LoadingOverlay />}
-            <div className="auth-card-landscape">
+            <div className="auth-card-landscape auth-page-animation">
                 <div className="login-left">
-                    <div className="brand-section">
+                    <div className="brand-section fade-in-up">
                         <div className="logo-placeholder">
                             <img src="/assets/bharti_logo.png" alt="Bharati Vidyapeeth Logo" className="logo-image" />
                         </div>
@@ -76,7 +76,7 @@ function Login() {
                         </div>
                     </div>
 
-                    <div className="features-grid">
+                    <div className="features-grid fade-in-up delay-1">
                         <div className="feature-card">
                             <span className="feature-icon">⚡</span>
                             <h3>Fast Generation</h3>
@@ -100,7 +100,7 @@ function Login() {
                     </div>
                 </div>
 
-                <div className="login-right">
+                <div className="login-right fade-in-up delay-2">
                     <div className="form-header">
                         <h2>Login Account</h2>
                         <p className="auth-subtitle">Welcome back! Please enter your details.</p>
