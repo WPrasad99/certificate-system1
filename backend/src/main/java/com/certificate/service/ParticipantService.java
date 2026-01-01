@@ -20,6 +20,7 @@ public class ParticipantService {
     private final ParticipantRepository participantRepository;
     private final EventService eventService;
     private final FileParserUtil fileParserUtil;
+    private final CollaborationService collaborationService;
 
     @Transactional
     public List<ParticipantDTO> uploadParticipants(Long eventId, MultipartFile file, String email) throws Exception {
@@ -45,6 +46,8 @@ public class ParticipantService {
 
         if (!participantsToSave.isEmpty()) {
             participantRepository.saveAll(participantsToSave);
+            collaborationService.logAction(eventId, email, "UPLOAD_PARTICIPANTS",
+                    "Uploaded " + participantsToSave.size() + " participants");
         }
 
         // Return all participants for this event
@@ -70,6 +73,8 @@ public class ParticipantService {
         eventService.getEventById(participant.getEventId(), email);
 
         participantRepository.delete(participant);
+        collaborationService.logAction(participant.getEventId(), email, "REMOVE_PARTICIPANT",
+                "Removed participant: " + participant.getName());
     }
 
     @Transactional
@@ -78,5 +83,6 @@ public class ParticipantService {
         eventService.getEventById(eventId, email);
 
         participantRepository.deleteByEventId(eventId);
+        collaborationService.logAction(eventId, email, "CLEAR_PARTICIPANTS", "Removed all participants");
     }
 }

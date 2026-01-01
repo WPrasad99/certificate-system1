@@ -50,11 +50,20 @@ function CollaboratorsTab({ eventId }) {
             setShowInviteModal(false);
             setSearchQuery('');
             setSearchResults([]);
-            alert('Invitation sent successfully!');
+            await loadCollaborators();
         } catch (error) {
-            setError(error.response?.data?.message || 'Failed to send invitation');
+            setError(error.response?.data?.error || error.response?.data?.message || 'Failed to send invitation');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleResend = async (userId) => {
+        try {
+            await collaborationService.resendInvitation(eventId, userId);
+            await loadCollaborators();
+        } catch (error) {
+            alert(error.response?.data?.message || 'Failed to resend invitation');
         }
     };
 
@@ -90,21 +99,34 @@ function CollaboratorsTab({ eventId }) {
             ) : (
                 <div className="collaborators-list">
                     {collaborators.map(collab => (
-                        <div key={collab.userId} className="collaborator-card">
+                        <div key={collab.userId} className={`collaborator-card ${collab.status?.toLowerCase()}`}>
                             <div className="collaborator-info">
                                 <div className="avatar">👤</div>
                                 <div className="details">
                                     <h4>{collab.name}</h4>
                                     <p>{collab.email}</p>
-                                    <span className="role-badge">{collab.role}</span>
+                                    <div className="badge-row">
+                                        <span className="role-badge">{collab.role}</span>
+                                        <span className={`status-badge ${collab.status?.toLowerCase()}`}>{collab.status}</span>
+                                    </div>
                                 </div>
                             </div>
-                            <button
-                                className="btn-remove"
-                                onClick={() => handleRemove(collab.userId)}
-                            >
-                                Remove
-                            </button>
+                            <div className="collaborator-actions">
+                                {collab.status === 'DECLINED' && (
+                                    <button
+                                        className="btn-resend"
+                                        onClick={() => handleResend(collab.userId)}
+                                    >
+                                        Send Again
+                                    </button>
+                                )}
+                                <button
+                                    className="btn-remove"
+                                    onClick={() => handleRemove(collab.userId)}
+                                >
+                                    Remove
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -129,9 +151,19 @@ function CollaboratorsTab({ eventId }) {
                                 className="search-input"
                                 placeholder="Search by email..."
                                 value={searchQuery}
-                                onChange={(e) => handleSearch(e.target.value)}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    // Basic debounce
+                                    if (window.searchTimeout) clearTimeout(window.searchTimeout);
+                                    window.searchTimeout = setTimeout(() => {
+                                        handleSearch(e.target.value);
+                                    }, 500);
+                                }}
                                 autoFocus
                             />
+
+                            {loading && <div style={{ textAlign: 'center', color: '#666', margin: '10px 0' }}>Searching...</div>}
+
 
                             {error && <div className="error-message">{error}</div>}
 

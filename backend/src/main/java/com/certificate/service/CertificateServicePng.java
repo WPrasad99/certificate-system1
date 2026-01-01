@@ -41,6 +41,7 @@ public class CertificateServicePng {
     private final PngCertificateGenerator pngGenerator;
     private final EmailDispatchService emailDispatchService;
     private final com.certificate.util.QRCodeGenerator qrCodeGenerator;
+    private final CollaborationService collaborationService;
     // Removed JavaMailSender injection from here as it's moved to
     // EmailDispatchService
 
@@ -119,6 +120,7 @@ public class CertificateServicePng {
 
             certificateRepository.save(certificate);
         }
+        collaborationService.logAction(eventId, email, "GENERATE_CERTIFICATES", "Generated certificates for event");
     }
 
     /**
@@ -235,6 +237,8 @@ public class CertificateServicePng {
     public void sendCertificateByEmail(Long certificateId, String senderEmail) {
         // Use async send for fast UI response
         emailDispatchService.sendEmailAsync(certificateId, senderEmail);
+        collaborationService.logAction(certificateRepository.findById(certificateId).get().getEventId(),
+                senderEmail, "SEND_EMAIL", "Sent certificate email ID: " + certificateId);
     }
 
     public void sendAllCertificates(Long eventId, String senderEmail) {
@@ -257,6 +261,7 @@ public class CertificateServicePng {
                     .collect(Collectors.toList());
             emailDispatchService.sendEmailsBatchAsync(batchIds, eventId);
         }
+        collaborationService.logAction(eventId, senderEmail, "SEND_ALL_EMAILS", "Triggered mass email dispatch");
     }
 
     public void sendUpdateEmails(Long eventId, String subject, String content, String senderEmail) {
@@ -274,6 +279,7 @@ public class CertificateServicePng {
             List<Long> batchIds = participantIds.subList(i, Math.min(i + batchSize, participantIds.size()));
             emailDispatchService.sendUpdateEmailsBatchAsync(batchIds, subject, content, event.getOrganizerName());
         }
+        collaborationService.logAction(eventId, senderEmail, "SEND_UPDATES", "Sent mass updates: " + subject);
     }
 
     private String generateFileName(String participantName, Long participantId) {

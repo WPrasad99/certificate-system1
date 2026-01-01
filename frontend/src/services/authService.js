@@ -199,6 +199,21 @@ export const collaborationService = {
     searchUsers: async (email) => {
         const response = await api.get(`/users/search?email=${encodeURIComponent(email)}`);
         return response.data;
+    },
+
+    resendInvitation: async (eventId, userId) => {
+        const response = await api.post(`/events/${eventId}/collaborators/${userId}/resend`);
+        return response.data;
+    },
+
+    getSentRequests: async () => {
+        const response = await api.get('/collaboration/sent-requests');
+        return response.data;
+    },
+
+    getCollaboratorLogs: async (eventId, userId) => {
+        const response = await api.get(`/events/${eventId}/collaborators/${userId}/logs`);
+        return response.data;
     }
 };
 

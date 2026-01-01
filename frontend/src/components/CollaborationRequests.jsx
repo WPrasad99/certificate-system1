@@ -29,7 +29,7 @@ function CollaborationRequests() {
             await loadRequests();
             window.location.reload(); // Reload to show new event
         } catch (error) {
-            alert('Failed to accept request');
+            alert(error.response?.data?.error || 'Failed to accept request');
         } finally {
             setLoading(false);
         }
@@ -41,7 +41,7 @@ function CollaborationRequests() {
             await collaborationService.declineRequest(requestId);
             await loadRequests();
         } catch (error) {
-            alert('Failed to decline request');
+            alert(error.response?.data?.error || 'Failed to decline request');
         } finally {
             setLoading(false);
         }

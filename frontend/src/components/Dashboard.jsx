@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService, eventService, analyticsService } from '../services/authService';
+import { authService, eventService, analyticsService, collaborationService } from '../services/authService';
 import EventManagement from './EventManagement';
 import Modal from './Modal';
 import AnalyticsCharts from './AnalyticsCharts';
@@ -19,9 +19,89 @@ function Dashboard() {
     const [showNotifications, setShowNotifications] = useState(false);
     const [isNotifVibrating, setIsNotifVibrating] = useState(false);
 
+    // Collaboration Request State
+    const [pendingRequests, setPendingRequests] = useState([]);
+    const [showRequestsDropdown, setShowRequestsDropdown] = useState(false);
+
+    const requestsDropdownRef = useRef(null);
+    const notificationsDropdownRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (requestsDropdownRef.current && !requestsDropdownRef.current.contains(event.target)) {
+                setShowRequestsDropdown(false);
+            }
+            if (notificationsDropdownRef.current && !notificationsDropdownRef.current.contains(event.target)) {
+                setShowNotifications(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Vibrate on new requests
+    useEffect(() => {
+        if (pendingRequests.length > 0) {
+            if (window.navigator.vibrate) {
+                window.navigator.vibrate([100, 50, 100]);
+            }
+        }
+    }, [pendingRequests.length]);
+
     useEffect(() => {
         loadData();
+        loadRequests();
+        const interval = setInterval(loadRequests, 10000);
+        return () => clearInterval(interval);
     }, []);
+
+    const loadRequests = async () => {
+        try {
+            const [reqs, sentReqs] = await Promise.all([
+                collaborationService.getRequests(),
+                collaborationService.getSentRequests()
+            ]);
+            setPendingRequests(reqs || []);
+
+            // Process sent requests as notifications for the owner
+            if (Array.isArray(sentReqs)) {
+                sentReqs.forEach(req => {
+                    const statusMsg = req.status === 'ACCEPTED' ? 'accepted' : 'declined';
+                    const notifKey = `sent_req_${req.id}_${req.status}`;
+                    // Only add if not already notified (simple check using localStorage or state)
+                    const notified = localStorage.getItem(notifKey);
+                    if (!notified) {
+                        addNotification(req.status === 'ACCEPTED' ? 'success' : 'info',
+                            `${req.senderName} ${statusMsg} your invitation for ${req.eventName}`);
+                        localStorage.setItem(notifKey, 'true');
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load requests:', error);
+        }
+    };
+
+    const handleAcceptRequest = async (id) => {
+        try {
+            await collaborationService.acceptRequest(id);
+            addNotification('success', 'Invitation accepted!');
+            loadRequests();
+            loadData(); // Reload events to see the new one
+        } catch (error) {
+            addNotification('error', 'Failed to accept invitation');
+        }
+    };
+
+    const handleDeclineRequest = async (id) => {
+        try {
+            await collaborationService.declineRequest(id);
+            addNotification('info', 'Invitation declined');
+            loadRequests();
+        } catch (error) {
+            addNotification('error', 'Failed to decline invitation');
+        }
+    };
 
     const loadData = async () => {
         setLoading(true);
@@ -104,23 +184,79 @@ function Dashboard() {
                     </div>
                     <div className="secondary-actions">
                         <div className="navbar-actions">
-                            <div className="notifications-container">
+                            {/* Team Collaboration Icon */}
+                            <div className="notifications-container" style={{ marginRight: '16px', marginLeft: '48px' }} ref={requestsDropdownRef}>
+                                <button
+                                    className={`notifications-btn ${pendingRequests.length > 0 ? 'vibrate-bt' : ''}`}
+                                    onClick={() => {
+                                        setShowRequestsDropdown(!showRequestsDropdown);
+                                        setShowNotifications(false);
+                                    }}
+                                    title="Collaboration Requests"
+                                >
+                                    <i className="fa-solid fa-user-plus" style={{ fontSize: '18px', color: '#1e3a8a' }}></i>
+                                    {Array.isArray(pendingRequests) && pendingRequests.length > 0 &&
+                                        <span className="notification-badge" style={{ background: '#333', color: 'white' }}>{pendingRequests.length}</span>
+                                    }
+                                </button>
+
+                                {showRequestsDropdown && (
+                                    <div className="notifications-dropdown minimal-dropdown" style={{ width: '320px' }}>
+                                        <div className="notifications-header minimal-header">
+                                            <h3>Team invitations</h3>
+                                        </div>
+                                        <div className="notifications-list">
+                                            {(!Array.isArray(pendingRequests) || pendingRequests.length === 0) ? (
+                                                <div className="notification-item" style={{ justifyContent: 'center', color: '#888' }}>
+                                                    No pending invitations
+                                                </div>
+                                            ) : (
+                                                pendingRequests.map(req => (
+                                                    <div key={req.id} className="notification-item" style={{ display: 'block' }}>
+                                                        <div className="notification-message" style={{ marginBottom: '8px' }}>
+                                                            <strong>{req.eventName}</strong>
+                                                            <div style={{ fontSize: '12px', color: '#666' }}>From: {req.senderName}</div>
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                                            <button
+                                                                className="btn btn-sm"
+                                                                style={{ background: '#4caf50', color: 'white', flex: 1 }}
+                                                                onClick={() => handleAcceptRequest(req.id)}
+                                                            >
+                                                                Accept
+                                                            </button>
+                                                            <button
+                                                                className="btn btn-sm"
+                                                                style={{ background: '#f44336', color: 'white', flex: 1 }}
+                                                                onClick={() => handleDeclineRequest(req.id)}
+                                                            >
+                                                                Decline
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="notifications-container" ref={notificationsDropdownRef}>
                                 <button
                                     className={`notifications-btn ${isNotifVibrating ? 'vibrate-bt' : ''}`}
-                                    onClick={() => setShowNotifications(!showNotifications)}
+                                    onClick={() => {
+                                        setShowNotifications(!showNotifications);
+                                        setShowRequestsDropdown(false);
+                                    }}
                                 >
-                                    <img
-                                        src="https://cdn-icons-png.flaticon.com/512/3119/3119338.png"
-                                        alt="Notifications"
-                                        className="bell-icon-img"
-                                    />
-                                    {notifications.length > 0 && <span className="notification-badge">{notifications.length}</span>}
+                                    <i className="fa-regular fa-bell" style={{ fontSize: '20px', color: '#333' }}></i>
+                                    {notifications.length > 0 && <span className="notification-badge" style={{ background: '#333' }}>{notifications.length}</span>}
                                 </button>
 
                                 {showNotifications && (
-                                    <div className="notifications-dropdown">
-                                        <div className="notifications-header">
-                                            <h3>Recent Alerts</h3>
+                                    <div className="notifications-dropdown minimal-dropdown">
+                                        <div className="notifications-header minimal-header">
+                                            <h3>Recent alerts</h3>
                                         </div>
                                         <div className="notifications-list">
                                             {notifications.map(n => (

@@ -20,4 +20,6 @@ public interface CollaborationRequestRepository extends JpaRepository<Collaborat
     boolean existsByEventIdAndRecipientEmailAndStatus(Long eventId, String recipientEmail, String status);
 
     List<CollaborationRequest> findByEventId(Long eventId);
+
+    List<CollaborationRequest> findBySenderIdAndStatusNot(Long senderId, String status);
 }

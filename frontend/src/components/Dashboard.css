@@ -660,3 +660,23 @@
     outline: none;
     box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.08);
 }
+
+/* Minimal Dropdown Styles */
+.minimal-dropdown {
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06) !important;
+}
+
+.minimal-header {
+    background: #ffffff !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding: 14px 20px !important;
+}
+
+.minimal-header h3 {
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    color: #1e293b !important;
+    text-transform: capitalize !important;
+}

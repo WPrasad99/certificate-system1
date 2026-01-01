@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "event_collaborators")
-public class EventCollaborator {
+@Table(name = "event_logs")
+public class EventLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,22 +17,19 @@ public class EventCollaborator {
     private Long eventId;
 
     @Column(nullable = false)
-    private Long userId;
+    private Long userId; // The user who performed the action
 
     @Column(nullable = false)
-    private String role; // "COLLABORATOR"
+    private String action; // e.g., "UPLOAD_PARTICIPANTS", "GENERATE_CERTIFICATES"
+
+    @Column(length = 1000)
+    private String details;
 
     @Column(nullable = false)
-    private String status; // "PENDING", "ACCEPTED", "DECLINED"
-
-    @Column(nullable = false)
-    private LocalDateTime addedAt;
+    private LocalDateTime timestamp;
 
     @PrePersist
     protected void onCreate() {
-        addedAt = LocalDateTime.now();
-        if (role == null) {
-            role = "COLLABORATOR";
-        }
+        timestamp = LocalDateTime.now();
     }
 }
