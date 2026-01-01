@@ -70,15 +70,30 @@ function Dashboard() {
             if (Array.isArray(unreadMsgs)) {
                 unreadMsgs.forEach(msg => {
                     const notifKey = `msg_${msg.id}`;
-                    const notified = localStorage.getItem(notifKey);
-                    if (!notified) {
-                        addNotification('info',
-                            `New message from ${msg.senderName}: ${msg.content.substring(0, 30)}${msg.content.length > 30 ? '...' : ''}`,
-                            msg.eventId,
-                            'messages'
-                        );
-                        localStorage.setItem(notifKey, 'true');
-                    }
+                    const alreadyToastShown = localStorage.getItem(notifKey);
+
+                    // Add to notifications list if not already present
+                    setNotifications(prev => {
+                        if (prev.some(n => n.id === msg.id || n.msgId === msg.id)) return prev;
+
+                        const newNotif = {
+                            id: msg.id,
+                            msgId: msg.id,
+                            type: 'info',
+                            message: `New message from ${msg.senderName}: ${msg.content.substring(0, 30)}${msg.content.length > 30 ? '...' : ''}`,
+                            time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            eventId: msg.eventId,
+                            targetTab: 'messages'
+                        };
+
+                        if (!alreadyToastShown) {
+                            setIsNotifVibrating(true);
+                            setTimeout(() => setIsNotifVibrating(false), 500);
+                            localStorage.setItem(notifKey, 'true');
+                        }
+
+                        return [newNotif, ...prev].slice(0, 10);
+                    });
                 });
             }
 
@@ -87,15 +102,29 @@ function Dashboard() {
                 sentReqs.forEach(req => {
                     const statusMsg = req.status === 'ACCEPTED' ? 'accepted' : 'declined';
                     const notifKey = `sent_req_${req.id}_${req.status}`;
-                    const notified = localStorage.getItem(notifKey);
-                    if (!notified) {
-                        addNotification(req.status === 'ACCEPTED' ? 'success' : 'info',
-                            `${req.senderName} ${statusMsg} your invitation for ${req.eventName}`,
-                            req.eventId,
-                            'team'
-                        );
-                        localStorage.setItem(notifKey, 'true');
-                    }
+                    const alreadyToastShown = localStorage.getItem(notifKey);
+
+                    setNotifications(prev => {
+                        const uniqueId = `req_${req.id}_${req.status}`;
+                        if (prev.some(n => n.id === uniqueId)) return prev;
+
+                        const newNotif = {
+                            id: uniqueId,
+                            type: req.status === 'ACCEPTED' ? 'success' : 'info',
+                            message: `${req.senderName} ${statusMsg} your invitation for ${req.eventName}`,
+                            time: 'Update',
+                            eventId: req.eventId,
+                            targetTab: 'team'
+                        };
+
+                        if (!alreadyToastShown) {
+                            setIsNotifVibrating(true);
+                            setTimeout(() => setIsNotifVibrating(false), 500);
+                            localStorage.setItem(notifKey, 'true');
+                        }
+
+                        return [newNotif, ...prev].slice(0, 10);
+                    });
                 });
             }
 
@@ -103,15 +132,28 @@ function Dashboard() {
             if (Array.isArray(actionLogs)) {
                 actionLogs.forEach(log => {
                     const notifKey = `action_log_${log.id}`;
-                    const notified = localStorage.getItem(notifKey);
-                    if (!notified) {
-                        addNotification('info',
-                            `${log.userName}: ${log.action.replace(/_/g, ' ')}`,
-                            log.eventId,
-                            'team'
-                        );
-                        localStorage.setItem(notifKey, 'true');
-                    }
+                    const alreadyToastShown = localStorage.getItem(notifKey);
+
+                    setNotifications(prev => {
+                        if (prev.some(n => n.id === `log_${log.id}`)) return prev;
+
+                        const newNotif = {
+                            id: `log_${log.id}`,
+                            type: 'info',
+                            message: `${log.userName}: ${log.action.replace(/_/g, ' ')}`,
+                            time: 'Log',
+                            eventId: log.eventId,
+                            targetTab: 'team'
+                        };
+
+                        if (!alreadyToastShown) {
+                            setIsNotifVibrating(true);
+                            setTimeout(() => setIsNotifVibrating(false), 500);
+                            localStorage.setItem(notifKey, 'true');
+                        }
+
+                        return [newNotif, ...prev].slice(0, 10);
+                    });
                 });
             }
         } catch (error) {
@@ -180,7 +222,7 @@ function Dashboard() {
     const handleNotificationClick = (notif) => {
         if (notif.eventId) {
             // Find the event in our list
-            const event = events.find(e => e.id === notif.eventId);
+            const event = events.find(e => Number(e.id) === Number(notif.eventId));
             if (event) {
                 setInitialTab(notif.targetTab || 'participants');
                 setSelectedEvent(event);

@@ -20,6 +20,7 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final OrganizerRepository organizerRepository;
     private final AuthService authService;
+    private final EventService eventService;
 
     @Transactional
     public void sendMessages(MessageRequest request, String senderEmail) {
@@ -35,11 +36,13 @@ public class MessageService {
         }
     }
 
-    public List<MessageDTO> getMessagesForEvent(Long eventId, String receiverEmail) {
-        Organizer receiver = authService.getOrganizerByEmail(receiverEmail);
-        List<Message> messages = messageRepository.findByEventIdAndReceiverIdOrderByTimestampDesc(eventId,
-                receiver.getId());
+    public List<MessageDTO> getMessagesForEvent(Long eventId, String userEmail) {
+        // Security check: Must be owner or collaborator
+        if (!eventService.getEventById(eventId, userEmail).getId().equals(eventId)) {
+            throw new RuntimeException("Unauthorized");
+        }
 
+        List<Message> messages = messageRepository.findByEventIdOrderByTimestampAsc(eventId);
         return messages.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
@@ -70,6 +73,7 @@ public class MessageService {
                 message.getId(),
                 message.getEventId(),
                 message.getSenderId(),
+                message.getReceiverId(),
                 senderName,
                 message.getContent(),
                 message.getTimestamp(),

@@ -13,6 +13,7 @@ public class MessageDTO {
     private Long id;
     private Long eventId;
     private Long senderId;
+    private Long receiverId;
     private String senderName;
     private String content;
     private LocalDateTime timestamp;

@@ -1,30 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { collaborationService, messageService, authService } from '../services/authService';
 import './MessagesTab.css';
 
 function MessagesTab({ eventId, event, isOwner }) {
     const [members, setMembers] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [messageContent, setMessageContent] = useState('');
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showSent, setShowSent] = useState(false);
     const currentUser = authService.getCurrentUser();
+    const messagesEndRef = useRef(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     useEffect(() => {
         loadMembers();
         loadMessages();
-        const interval = setInterval(loadMessages, 10000); // Poll for new messages
+        const interval = setInterval(loadMessages, 5000); // More frequent updates for chat
         return () => clearInterval(interval);
     }, [eventId]);
 
     const loadMembers = async () => {
         try {
             const collaborators = await collaborationService.getCollaborators(eventId);
-            // Filter only accepted collaborators
             const acceptedCollaborators = collaborators.filter(c => c.status === 'ACCEPTED');
 
-            // Add owner to the list if current user is not owner
             const membersList = [...acceptedCollaborators];
             if (!isOwner) {
                 membersList.push({
@@ -33,12 +41,8 @@ function MessagesTab({ eventId, event, isOwner }) {
                     email: event.organizerEmail,
                     role: 'OWNER'
                 });
-            } else {
-                // Owner is current user, so don't add to list, but maybe collaborators want to see each other?
-                // The collaborators list already has all other collaborators.
             }
 
-            // Filter out current user from members list
             const others = membersList.filter(m => m.userId !== currentUser.id);
             setMembers(others);
         } catch (error) {
@@ -49,9 +53,12 @@ function MessagesTab({ eventId, event, isOwner }) {
     const loadMessages = async () => {
         try {
             const data = await messageService.getMessages(eventId);
+            // Data now includes both sent and received
             setMessages(data || []);
-            // Mark as read when viewing
-            if (data && data.some(m => !m.isRead)) {
+
+            // Mark received messages as read
+            const unreadCount = data ? data.filter(m => !m.isRead && m.receiverId === currentUser.id).length : 0;
+            if (unreadCount > 0) {
                 await messageService.markAsRead(eventId);
             }
         } catch (error) {
@@ -80,12 +87,10 @@ function MessagesTab({ eventId, event, isOwner }) {
             });
             setMessageContent('');
             setSelectedMembers([]);
+            setSearchTerm(''); // Clear search
             setShowSent(true);
             setTimeout(() => setShowSent(false), 3000);
-            loadMessages(); // Reload list to see my own sent message? 
-            // Actually the current getMessages only returns messages RECEIVED by current user.
-            // If we want to see SENT messages we might need another endpoint or list.
-            // User only asked for 'Sent' indicator in box for now.
+            loadMessages();
         } catch (error) {
             console.error('Failed to send message:', error);
             alert('Failed to send message');
@@ -94,25 +99,53 @@ function MessagesTab({ eventId, event, isOwner }) {
         }
     };
 
+    const filteredMembers = searchTerm.trim()
+        ? members.filter(m =>
+            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.email.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        : [];
+
     return (
         <div className="messages-tab">
             <div className="messages-container">
                 <div className="composer-section">
-                    <h3>Send Team Message</h3>
+                    <h3>Send Message</h3>
                     <div className="member-selector">
-                        <p className="selector-label">To:</p>
-                        <div className="members-chips">
-                            {members.map(member => (
-                                <button
-                                    key={member.userId}
-                                    className={`member-chip ${selectedMembers.includes(member.userId) ? 'selected' : ''}`}
-                                    onClick={() => toggleMember(member.userId)}
-                                >
-                                    {member.name}
-                                </button>
-                            ))}
+                        <div className="search-box">
+                            <i className="fa-solid fa-magnifying-glass"></i>
+                            <input
+                                type="text"
+                                placeholder="Search teammates to message..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
+
+                        {(searchTerm.trim() !== '' || selectedMembers.length > 0) && (
+                            <div className="members-chips">
+                                {members.filter(m => selectedMembers.includes(m.userId)).map(member => (
+                                    <button
+                                        key={member.userId}
+                                        className="member-chip selected"
+                                        onClick={() => toggleMember(member.userId)}
+                                    >
+                                        {member.name} <i className="fa-solid fa-xmark"></i>
+                                    </button>
+                                ))}
+                                {filteredMembers.filter(m => !selectedMembers.includes(m.userId)).map(member => (
+                                    <button
+                                        key={member.userId}
+                                        className="member-chip"
+                                        onClick={() => toggleMember(member.userId)}
+                                    >
+                                        {member.name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
+
                     <form onSubmit={handleSendMessage} className="message-form">
                         <textarea
                             placeholder="Type your message here..."
@@ -131,24 +164,41 @@ function MessagesTab({ eventId, event, isOwner }) {
                 </div>
 
                 <div className="inbox-section">
-                    <h3>Team Messages</h3>
-                    <div className="messages-list">
+                    <h3>Team Chat</h3>
+                    <div className="chat-viewport">
                         {messages.length === 0 ? (
                             <div className="empty-messages">
-                                <p>No messages yet.</p>
+                                <p>No messages yet. Start the conversation!</p>
                             </div>
                         ) : (
-                            messages.map(msg => (
-                                <div key={msg.id} className={`message-item ${msg.isRead ? 'read' : 'unread'}`}>
-                                    <div className="message-header">
-                                        <span className="sender-name">{msg.senderName}</span>
-                                        <span className="message-time">
-                                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
-                                    <p className="message-content">{msg.content}</p>
-                                </div>
-                            ))
+                            <div className="messages-viewport">
+                                {messages.map((msg, index) => {
+                                    const isSent = Number(msg.senderId) === Number(currentUser.id);
+                                    return (
+                                        <div key={index} className={`chat-bubble-wrapper ${isSent ? 'sent' : 'received'}`}>
+                                            <div className="chat-bubble">
+                                                {!isSent && <div className="bubble-sender">{msg.senderName}</div>}
+                                                <div className="bubble-content">{msg.content}</div>
+                                                <div className="bubble-meta">
+                                                    <span className="bubble-time">
+                                                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                    {isSent && (
+                                                        <span className={`status-ticks ${msg.isRead ? 'read' : 'sent'}`}>
+                                                            {msg.isRead ? (
+                                                                <i className="fa-solid fa-check-double"></i>
+                                                            ) : (
+                                                                <i className="fa-solid fa-check"></i>
+                                                            )}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                <div ref={messagesEndRef} />
+                            </div>
                         )}
                     </div>
                 </div>
