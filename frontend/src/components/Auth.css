@@ -34,7 +34,7 @@
     background: white;
     border-radius: 20px;
     width: 100%;
-    max-width: 1050px;
+    max-width: 950px;
     /* Slightly wider to accommodate larger cards */
     min-height: 600px;
     box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.06);
@@ -100,12 +100,12 @@
 }
 
 .logo-image {
-    height: 100px;
+    height: 90px;
     /* Further increased logo size */
     width: auto;
     max-width: 90%;
     object-fit: contain;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
 }
 
 .welcome-text {

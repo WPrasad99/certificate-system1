@@ -75,24 +75,24 @@ function Register() {
 
                     <div className="features-grid fade-in-up delay-1">
                         <div className="feature-card">
-                            <span className="feature-icon">🚀</span>
-                            <h3>Scale Effortlessly</h3>
-                            <p>Handle any number of participants</p>
+                            <span className="feature-icon">⚡</span>
+                            <h3>Fast Generation</h3>
+                            <p>Generate certificates instantly</p>
                         </div>
                         <div className="feature-card">
-                            <span className="feature-icon">🎨</span>
-                            <h3>Custom Designs</h3>
-                            <p>Beautiful templates for every event</p>
+                            <span className="feature-icon">🔒</span>
+                            <h3>Secure</h3>
+                            <p>Tamper-proof verification</p>
                         </div>
                         <div className="feature-card">
-                            <span className="feature-icon">📈</span>
-                            <h3>Growth Tools</h3>
-                            <p>Manage multiple events with ease</p>
+                            <span className="feature-icon">📤</span>
+                            <h3>Easy Dispatch</h3>
+                            <p>Send via email in one click</p>
                         </div>
                         <div className="feature-card">
-                            <span className="feature-icon">🤝</span>
-                            <h3>Collaboration</h3>
-                            <p>Work together with your team</p>
+                            <span className="feature-icon">📊</span>
+                            <h3>Analytics</h3>
+                            <p>Track your event success</p>
                         </div>
                     </div>
                 </div>
