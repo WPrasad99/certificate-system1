@@ -47,8 +47,9 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         String token = jwtUtil.generateToken(email);
 
         // Redirect to frontend with token and user info
-        String redirectUrl = String.format("http://localhost:5173/oauth/callback?token=%s&fullName=%s&email=%s",
-                token, java.net.URLEncoder.encode(name, "UTF-8"), java.net.URLEncoder.encode(email, "UTF-8"));
+        String redirectUrl = String.format("http://localhost:5173/oauth/callback?token=%s&fullName=%s&email=%s&id=%s",
+                token, java.net.URLEncoder.encode(name, "UTF-8"), java.net.URLEncoder.encode(email, "UTF-8"),
+                organizer.getId());
         response.sendRedirect(redirectUrl);
     }
 }

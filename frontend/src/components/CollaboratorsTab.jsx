@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { collaborationService } from '../services/authService';
 import './CollaboratorsTab.css';
 
-function CollaboratorsTab({ eventId }) {
+function CollaboratorsTab({ eventId, isOwner }) {
     const [collaborators, setCollaborators] = useState([]);
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [selectedCollaborator, setSelectedCollaborator] = useState(null);
+    const [logs, setLogs] = useState([]);
+    const [showLogsModal, setShowLogsModal] = useState(false);
 
     useEffect(() => {
         loadCollaborators();
@@ -80,16 +83,32 @@ function CollaboratorsTab({ eventId }) {
         }
     };
 
+    const handleShowLogs = async (collab) => {
+        setLoading(true);
+        setSelectedCollaborator(collab);
+        try {
+            const history = await collaborationService.getCollaboratorLogs(eventId, collab.userId);
+            setLogs(history || []);
+            setShowLogsModal(true);
+        } catch (error) {
+            alert('Failed to load activity logs');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="collaborators-tab">
             <div className="tab-header">
                 <h3>Team Collaborators</h3>
-                <button
-                    className="btn btn-primary"
-                    onClick={() => setShowInviteModal(true)}
-                >
-                    + Invite Collaborator
-                </button>
+                {isOwner && (
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => setShowInviteModal(true)}
+                    >
+                        + Invite Collaborator
+                    </button>
+                )}
             </div>
 
             {collaborators.length === 0 ? (
@@ -112,7 +131,7 @@ function CollaboratorsTab({ eventId }) {
                                 </div>
                             </div>
                             <div className="collaborator-actions">
-                                {collab.status === 'DECLINED' && (
+                                {isOwner && collab.status === 'DECLINED' && (
                                     <button
                                         className="btn-resend"
                                         onClick={() => handleResend(collab.userId)}
@@ -120,12 +139,23 @@ function CollaboratorsTab({ eventId }) {
                                         Send Again
                                     </button>
                                 )}
-                                <button
-                                    className="btn-remove"
-                                    onClick={() => handleRemove(collab.userId)}
-                                >
-                                    Remove
-                                </button>
+                                {isOwner && collab.status === 'ACCEPTED' && (
+                                    <button
+                                        className="btn-history"
+                                        onClick={() => handleShowLogs(collab)}
+                                        style={{ marginRight: '8px' }}
+                                    >
+                                        History
+                                    </button>
+                                )}
+                                {isOwner && (
+                                    <button
+                                        className="btn-remove"
+                                        onClick={() => handleRemove(collab.userId)}
+                                    >
+                                        Remove
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -192,6 +222,32 @@ function CollaboratorsTab({ eventId }) {
 
                             {searchQuery.trim().length >= 3 && searchResults.length === 0 && (
                                 <div className="no-results">No users found</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showLogsModal && (
+                <div className="modal-overlay" onClick={() => setShowLogsModal(false)}>
+                    <div className="modal-content log-modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Activity History: {selectedCollaborator?.name}</h3>
+                            <button className="close-btn" onClick={() => setShowLogsModal(false)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            {logs.length === 0 ? (
+                                <p className="no-logs">No activity recorded yet.</p>
+                            ) : (
+                                <div className="logs-container">
+                                    {logs.map((log, index) => (
+                                        <div key={index} className="log-item">
+                                            <div className="log-action">{log.action.replace(/_/g, ' ')}</div>
+                                            <div className="log-details">{log.details}</div>
+                                            <div className="log-time">{new Date(log.timestamp).toLocaleString()}</div>
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </div>

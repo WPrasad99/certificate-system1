@@ -10,12 +10,14 @@ function OAuthCallback() {
         const token = searchParams.get('token');
         const fullName = searchParams.get('fullName');
         const email = searchParams.get('email');
+        const id = searchParams.get('id');
 
         if (token) {
             // Store the token and user info in localStorage
             localStorage.setItem('token', token);
             if (fullName && email) {
                 localStorage.setItem('user', JSON.stringify({
+                    id: id ? parseInt(id) : null,
                     fullName,
                     email
                 }));

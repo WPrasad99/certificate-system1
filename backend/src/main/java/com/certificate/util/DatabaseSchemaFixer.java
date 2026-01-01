@@ -42,6 +42,16 @@ public class DatabaseSchemaFixer {
                     "details VARCHAR(1000), " +
                     "timestamp TIMESTAMP NOT NULL)");
 
+            // Create messages table if not exists
+            jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS messages (" +
+                    "id SERIAL PRIMARY KEY, " +
+                    "event_id BIGINT NOT NULL, " +
+                    "sender_id BIGINT NOT NULL, " +
+                    "receiver_id BIGINT NOT NULL, " +
+                    "content TEXT NOT NULL, " +
+                    "timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                    "is_read BOOLEAN NOT NULL DEFAULT FALSE)");
+
             log.info("Database schema fixes applied successfully.");
         } catch (Exception e) {
             log.warn("Database schema fix failed (it might already be correct): {}", e.getMessage());

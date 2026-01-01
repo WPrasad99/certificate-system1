@@ -153,4 +153,10 @@ public class CollaborationController {
         String email = authentication.getName();
         return ResponseEntity.ok(collaborationService.getSenderRequests(email));
     }
+
+    @GetMapping("/collaboration/owned-events/logs")
+    public ResponseEntity<?> getOwnedEventsLogs(Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(collaborationService.getLogsForOwnedEvents(email));
+    }
 }

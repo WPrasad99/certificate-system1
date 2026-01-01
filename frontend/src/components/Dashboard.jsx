@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService, eventService, analyticsService, collaborationService } from '../services/authService';
+import { authService, eventService, analyticsService, collaborationService, messageService } from '../services/authService';
 import EventManagement from './EventManagement';
 import Modal from './Modal';
 import AnalyticsCharts from './AnalyticsCharts';
@@ -14,6 +14,7 @@ function Dashboard() {
     const [stats, setStats] = useState({ totalEvents: 0, totalCertificates: 0 });
     const [loading, setLoading] = useState(true);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [initialTab, setInitialTab] = useState('participants');
     const [modal, setModal] = useState({ isOpen: false, eventId: null });
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -57,22 +58,58 @@ function Dashboard() {
 
     const loadRequests = async () => {
         try {
-            const [reqs, sentReqs] = await Promise.all([
+            const [reqs, sentReqs, actionLogs, unreadMsgs] = await Promise.all([
                 collaborationService.getRequests(),
-                collaborationService.getSentRequests()
+                collaborationService.getSentRequests(),
+                collaborationService.getOwnedEventsLogs(),
+                messageService.getUnreadMessages()
             ]);
             setPendingRequests(reqs || []);
+
+            // Process unread messages as notifications
+            if (Array.isArray(unreadMsgs)) {
+                unreadMsgs.forEach(msg => {
+                    const notifKey = `msg_${msg.id}`;
+                    const notified = localStorage.getItem(notifKey);
+                    if (!notified) {
+                        addNotification('info',
+                            `New message from ${msg.senderName}: ${msg.content.substring(0, 30)}${msg.content.length > 30 ? '...' : ''}`,
+                            msg.eventId,
+                            'messages'
+                        );
+                        localStorage.setItem(notifKey, 'true');
+                    }
+                });
+            }
 
             // Process sent requests as notifications for the owner
             if (Array.isArray(sentReqs)) {
                 sentReqs.forEach(req => {
                     const statusMsg = req.status === 'ACCEPTED' ? 'accepted' : 'declined';
                     const notifKey = `sent_req_${req.id}_${req.status}`;
-                    // Only add if not already notified (simple check using localStorage or state)
                     const notified = localStorage.getItem(notifKey);
                     if (!notified) {
                         addNotification(req.status === 'ACCEPTED' ? 'success' : 'info',
-                            `${req.senderName} ${statusMsg} your invitation for ${req.eventName}`);
+                            `${req.senderName} ${statusMsg} your invitation for ${req.eventName}`,
+                            req.eventId,
+                            'team'
+                        );
+                        localStorage.setItem(notifKey, 'true');
+                    }
+                });
+            }
+
+            // Process collaborator actions as notifications for the owner
+            if (Array.isArray(actionLogs)) {
+                actionLogs.forEach(log => {
+                    const notifKey = `action_log_${log.id}`;
+                    const notified = localStorage.getItem(notifKey);
+                    if (!notified) {
+                        addNotification('info',
+                            `${log.userName}: ${log.action.replace(/_/g, ' ')}`,
+                            log.eventId,
+                            'team'
+                        );
                         localStorage.setItem(notifKey, 'true');
                     }
                 });
@@ -126,19 +163,34 @@ function Dashboard() {
         navigate('/login');
     };
 
-    const addNotification = (type, message) => {
+    const addNotification = (type, message, eventId = null, targetTab = null) => {
         const newNotification = {
             id: Date.now(),
             type,
             message,
-            time: 'Just now'
+            time: 'Just now',
+            eventId,
+            targetTab
         };
         setNotifications(prev => [newNotification, ...prev].slice(0, 10));
         setIsNotifVibrating(true);
         setTimeout(() => setIsNotifVibrating(false), 500);
     };
 
+    const handleNotificationClick = (notif) => {
+        if (notif.eventId) {
+            // Find the event in our list
+            const event = events.find(e => e.id === notif.eventId);
+            if (event) {
+                setInitialTab(notif.targetTab || 'participants');
+                setSelectedEvent(event);
+                setShowNotifications(false);
+            }
+        }
+    };
+
     const handleEventSelect = (event) => {
+        setInitialTab('participants');
         setSelectedEvent(event);
     };
 
@@ -164,6 +216,7 @@ function Dashboard() {
     if (selectedEvent) {
         return <EventManagement
             event={selectedEvent}
+            initialTab={initialTab}
             onBack={handleBackToDashboard}
             onNotify={addNotification}
         />;
@@ -184,8 +237,51 @@ function Dashboard() {
                     </div>
                     <div className="secondary-actions">
                         <div className="navbar-actions">
-                            {/* Team Collaboration Icon */}
-                            <div className="notifications-container" style={{ marginRight: '16px', marginLeft: '48px' }} ref={requestsDropdownRef}>
+                            {/* Notification Bell Icon */}
+                            <div className="notifications-container" ref={notificationsDropdownRef}>
+                                <button
+                                    className={`notifications-btn ${isNotifVibrating ? 'vibrate-bt' : ''}`}
+                                    onClick={() => {
+                                        setShowNotifications(!showNotifications);
+                                        setShowRequestsDropdown(false);
+                                    }}
+                                    title="Notifications"
+                                >
+                                    <i className="fa-solid fa-bell" style={{ fontSize: '18px', color: '#1e3a8a' }}></i>
+                                    {notifications.length > 0 &&
+                                        <span className="notification-badge">{notifications.length}</span>
+                                    }
+                                </button>
+
+                                {showNotifications && (
+                                    <div className="notifications-dropdown">
+                                        <div className="notifications-header">
+                                            <h3>Notifications</h3>
+                                        </div>
+                                        <div className="notifications-list">
+                                            {notifications.length === 0 ? (
+                                                <div className="notification-item" style={{ textAlign: 'center', color: '#888' }}>
+                                                    No new notifications
+                                                </div>
+                                            ) : (
+                                                notifications.map(notif => (
+                                                    <div
+                                                        key={notif.id}
+                                                        className={`notification-item ${notif.type} ${notif.eventId ? 'clickable' : ''}`}
+                                                        onClick={() => handleNotificationClick(notif)}
+                                                    >
+                                                        <div className="notification-message">{notif.message}</div>
+                                                        <div className="notification-time">{notif.time}</div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Team Collaboration Icon - Shifted Right */}
+                            <div className="notifications-container" style={{ marginLeft: '32px' }} ref={requestsDropdownRef}>
                                 <button
                                     className={`notifications-btn ${pendingRequests.length > 0 ? 'vibrate-bt' : ''}`}
                                     onClick={() => {
@@ -201,7 +297,7 @@ function Dashboard() {
                                 </button>
 
                                 {showRequestsDropdown && (
-                                    <div className="notifications-dropdown minimal-dropdown" style={{ width: '320px' }}>
+                                    <div className="notifications-dropdown minimal-dropdown" style={{ width: '320px', right: '0' }}>
                                         <div className="notifications-header minimal-header">
                                             <h3>Team invitations</h3>
                                         </div>
@@ -240,39 +336,10 @@ function Dashboard() {
                                     </div>
                                 )}
                             </div>
-
-                            <div className="notifications-container" ref={notificationsDropdownRef}>
-                                <button
-                                    className={`notifications-btn ${isNotifVibrating ? 'vibrate-bt' : ''}`}
-                                    onClick={() => {
-                                        setShowNotifications(!showNotifications);
-                                        setShowRequestsDropdown(false);
-                                    }}
-                                >
-                                    <i className="fa-regular fa-bell" style={{ fontSize: '20px', color: '#333' }}></i>
-                                    {notifications.length > 0 && <span className="notification-badge" style={{ background: '#333' }}>{notifications.length}</span>}
-                                </button>
-
-                                {showNotifications && (
-                                    <div className="notifications-dropdown minimal-dropdown">
-                                        <div className="notifications-header minimal-header">
-                                            <h3>Recent alerts</h3>
-                                        </div>
-                                        <div className="notifications-list">
-                                            {notifications.map(n => (
-                                                <div key={n.id} className={`notification-item ${n.type}`}>
-                                                    <div className="notification-message">{n.message}</div>
-                                                    <div className="notification-time">{n.time}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <button onClick={handleLogout} className="btn btn-secondary btn-sm">
-                                Logout
-                            </button>
                         </div>
+                        <button onClick={handleLogout} className="btn btn-secondary btn-sm">
+                            Logout
+                        </button>
                     </div>
                 </div>
             </nav>
@@ -282,10 +349,6 @@ function Dashboard() {
                     <div className="welcome-banner">
                         <span className="welcome-label">Welcome back,</span>
                         <h2 className="welcome-user">{user?.fullName}</h2>
-                    </div>
-                    <div className="header-title-row">
-                        <h1>Dashboard</h1>
-                        <p className="subtitle">Manage your events and certificates</p>
                     </div>
                 </div>
 

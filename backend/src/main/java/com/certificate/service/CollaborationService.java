@@ -331,7 +331,9 @@ public class CollaborationService {
         if (user == null)
             return false;
 
-        return collaboratorRepository.existsByEventIdAndUserId(eventId, user.getId());
+        return collaboratorRepository.findByEventIdAndUserId(eventId, user.getId())
+                .map(c -> "ACCEPTED".equals(c.getStatus()))
+                .orElse(false);
     }
 
     /**
@@ -384,5 +386,39 @@ public class CollaborationService {
             dto.setTimestamp(logEntry.getTimestamp());
             return dto;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * Get recent logs for all events owned by the user (only collaborator actions)
+     */
+    public List<EventLogDTO> getLogsForOwnedEvents(String ownerEmail) {
+        Organizer owner = organizerRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        List<Event> ownedEvents = eventRepository.findByOrganizerId(owner.getId());
+
+        if (ownedEvents.isEmpty())
+            return List.of();
+
+        List<Long> eventIds = ownedEvents.stream().map(Event::getId).collect(Collectors.toList());
+
+        List<EventLog> logs = eventLogRepository.findByEventIdInOrderByTimestampDesc(eventIds);
+
+        return logs.stream()
+                .filter(log -> !log.getUserId().equals(owner.getId())) // Filter out owner's own actions
+                .limit(20)
+                .map(logEntry -> {
+                    Organizer user = organizerRepository.findById(logEntry.getUserId()).orElse(null);
+                    Event event = eventRepository.findById(logEntry.getEventId()).orElse(null);
+                    EventLogDTO dto = new EventLogDTO();
+                    dto.setId(logEntry.getId());
+                    dto.setEventId(logEntry.getEventId());
+                    dto.setUserId(logEntry.getUserId());
+                    dto.setUserName(user != null ? user.getFullName() : "Unknown");
+                    String eventName = event != null ? event.getEventName() : "Unknown Event";
+                    dto.setAction(logEntry.getAction() + " in " + eventName);
+                    dto.setDetails(logEntry.getDetails());
+                    dto.setTimestamp(logEntry.getTimestamp());
+                    return dto;
+                }).collect(Collectors.toList());
     }
 }

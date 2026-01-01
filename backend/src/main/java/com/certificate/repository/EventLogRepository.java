@@ -11,4 +11,6 @@ public interface EventLogRepository extends JpaRepository<EventLog, Long> {
     List<EventLog> findByEventIdOrderByTimestampDesc(Long eventId);
 
     List<EventLog> findByEventIdAndUserIdOrderByTimestampDesc(Long eventId, Long userId);
+
+    List<EventLog> findByEventIdInOrderByTimestampDesc(List<Long> eventIds);
 }

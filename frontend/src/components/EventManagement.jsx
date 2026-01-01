@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { participantService, certificateService } from '../services/authService';
+import { participantService, certificateService, authService } from '../services/authService';
 import './EventManagement.css';
 import CollaboratorsTab from './CollaboratorsTab';
+import MessagesTab from './MessagesTab';
 
 import Toast from './Toast';
 
-function EventManagement({ event, onBack, onNotify }) {
-    const [activeTab, setActiveTab] = useState('participants');
+function EventManagement({ event, onBack, onNotify, initialTab = 'participants' }) {
+    const currentUser = authService.getCurrentUser();
+    const isOwner = !!(currentUser && (
+        (currentUser.id && currentUser.id === event.organizerId) ||
+        (currentUser.email && event.organizerEmail && currentUser.email === event.organizerEmail)
+    ));
+    const [activeTab, setActiveTab] = useState(initialTab);
     const [participants, setParticipants] = useState([]);
     const [certificateStatus, setCertificateStatus] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -309,6 +315,12 @@ function EventManagement({ event, onBack, onNotify }) {
                     >
                         Team
                     </button>
+                    <button
+                        className={`tab ${activeTab === 'messages' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('messages')}
+                    >
+                        Team Messages
+                    </button>
                 </div>
 
                 {activeTab === 'participants' && (
@@ -345,7 +357,10 @@ function EventManagement({ event, onBack, onNotify }) {
                 )}
 
                 {activeTab === 'team' && (
-                    <CollaboratorsTab eventId={event.id} />
+                    <CollaboratorsTab eventId={event.id} isOwner={isOwner} />
+                )}
+                {activeTab === 'messages' && (
+                    <MessagesTab eventId={event.id} event={event} isOwner={isOwner} />
                 )}
             </div>
         </div>

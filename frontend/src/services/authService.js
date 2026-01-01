@@ -6,6 +6,7 @@ export const authService = {
         if (response.data.token) {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify({
+                id: response.data.id,
                 email: response.data.email,
                 fullName: response.data.fullName,
             }));
@@ -18,6 +19,7 @@ export const authService = {
         if (response.data.token) {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify({
+                id: response.data.id,
                 email: response.data.email,
                 fullName: response.data.fullName,
             }));
@@ -214,12 +216,40 @@ export const collaborationService = {
     getCollaboratorLogs: async (eventId, userId) => {
         const response = await api.get(`/events/${eventId}/collaborators/${userId}/logs`);
         return response.data;
+    },
+
+    getOwnedEventsLogs: async () => {
+        const response = await api.get('/collaboration/owned-events/logs');
+        return response.data;
     }
 };
 
 export const analyticsService = {
     getStats: async () => {
         const response = await api.get('/analytics/stats');
+        return response.data;
+    }
+};
+
+export const messageService = {
+    sendMessages: async (data) => {
+        const response = await api.post('/collaboration/messages/send', data);
+        return response.data;
+    },
+    getMessages: async (eventId) => {
+        const response = await api.get(`/collaboration/messages/event/${eventId}`);
+        return response.data;
+    },
+    getUnreadCount: async () => {
+        const response = await api.get('/collaboration/messages/unread-count');
+        return response.data;
+    },
+    getUnreadMessages: async () => {
+        const response = await api.get('/collaboration/messages/unread');
+        return response.data;
+    },
+    markAsRead: async (eventId) => {
+        const response = await api.post(`/collaboration/messages/event/${eventId}/read`);
         return response.data;
     }
 };

@@ -24,7 +24,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new AuthResponse(null, null, null, e.getMessage()));
+                    .body(new AuthResponse(null, null, null, null, e.getMessage()));
         }
     }
 
@@ -35,7 +35,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new AuthResponse(null, null, null, "Invalid credentials"));
+                    .body(new AuthResponse(null, null, null, null, "Invalid credentials"));
         }
     }
 

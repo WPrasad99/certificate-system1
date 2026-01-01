@@ -61,7 +61,7 @@ function Login() {
     return (
         <div className="auth-container">
             {showRedirectLoading && <LoadingOverlay />}
-            <div className="login-card-landscape">
+            <div className="auth-card-landscape">
                 <div className="login-left">
                     <div className="brand-section">
                         <div className="logo-placeholder">

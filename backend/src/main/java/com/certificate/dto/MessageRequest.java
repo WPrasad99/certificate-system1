@@ -3,14 +3,13 @@ package com.certificate.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
-    private Long id;
-    private String token;
-    private String email;
-    private String fullName;
-    private String message;
+public class MessageRequest {
+    private Long eventId;
+    private List<Long> receiverIds;
+    private String content;
 }
