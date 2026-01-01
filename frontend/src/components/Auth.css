@@ -204,7 +204,7 @@
 }
 
 .form-header {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     width: 100%;
 }
 
@@ -219,7 +219,7 @@
 .auth-subtitle {
     color: #64748b;
     font-size: 15px;
-    margin: 0 auto 24px auto;
+    margin: 0 auto 12px auto;
 }
 
 /* Form Elements */

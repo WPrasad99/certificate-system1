@@ -280,8 +280,8 @@ function Dashboard() {
                                 )}
                             </div>
 
-                            {/* Team Collaboration Icon - Shifted Right */}
-                            <div className="notifications-container" style={{ marginLeft: '32px' }} ref={requestsDropdownRef}>
+                            {/* Team Collaboration Icon - Shifted closer to Bell */}
+                            <div className="notifications-container" style={{ marginLeft: '12px' }} ref={requestsDropdownRef}>
                                 <button
                                     className={`notifications-btn ${pendingRequests.length > 0 ? 'vibrate-bt' : ''}`}
                                     onClick={() => {
