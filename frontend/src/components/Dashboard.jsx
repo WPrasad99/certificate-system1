@@ -84,7 +84,7 @@ function Dashboard() {
                             id: uniqueId,
                             msgId: uniqueId,
                             type: 'info',
-                            message: `New message from ${msg.senderName}: ${msg.content.substring(0, 30)}${msg.content.length > 30 ? '...' : ''}`,
+                            message: `New message from ${msg.senderName || 'Unknown'}: ${msg.content ? (msg.content.substring(0, 30) + (msg.content.length > 30 ? '...' : '')) : ''}`,
                             time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                             eventId: msg.eventId,
                             targetTab: 'messages'
@@ -151,10 +151,10 @@ function Dashboard() {
                         const newNotif = {
                             id: uniqueId,
                             type: 'info',
-                            message: `${log.userName} ${log.actionType.toLowerCase().replace('_', ' ')} ${log.details}`,
+                            message: `${log.userName} ${log.action ? log.action.toLowerCase().replace('_', ' ') : ''} ${log.details || ''}`,
                             time: new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                             eventId: log.eventId,
-                            targetTab: log.details.toLowerCase().includes('participant') ? 'participants' : 'team'
+                            targetTab: (log.details && log.details.toLowerCase().includes('participant')) ? 'participants' : 'team'
                         };
 
                         if (!alreadyToastShown) {
