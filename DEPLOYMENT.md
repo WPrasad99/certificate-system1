@@ -5,14 +5,28 @@
 ### 1. Set Up Supabase (Database + Storage)
 1. Go to [supabase.com](https://supabase.com) → Create new project
    - **Note:** You will create a **Database Password** here. **Write it down!** You cannot see it again later.
-2. **Find Database Credentials:**
-   - Go to **Project Settings** (Gear icon, bottom-left) → **Database**.
-   - Scroll to **Connection parameters**.
-   - Copy **Host** (e.g., `db.abcdef.supabase.co`).
-   - Copy **User** (usually `postgres`).
-   - **Database Name** is `postgres`.
-   - **Port** is `5432`.
-   - **Connection String:** At the top of this page, under "Connection string", click "URI". It looks like: `postgresql://postgres:[YOUR-PASSWORD]@db.xxxx.supabase.co:5432/postgres`.
+### 1. Set Up Supabase (Database + Storage)
+1. Go to [supabase.com](https://supabase.com) → Create new project
+2. **Find Database Credentials (The Easiest Way):**
+   - Look at the **very top right** of the dashboard.
+   - Click the green **"Connect"** button.
+   - Click **"Database"** in the popup.
+   - Select **"URI"** tab.
+   - **Copy the Connection String:** It looks like `postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres`.
+   - **Important:** You will need to replace `[password]` with the actual password you created.
+   - **Extract details from this string:**
+     - **Host:** Everything between `@` and `:` (e.g., `aws-0-us-east-1.pooler.supabase.com`)
+     - **Port:** The number after `:` (e.g., `6543` or `5432`)
+     - **User:** The part before `:` (e.g., `postgres.abcdef`)
+3. **Find API Keys & URL:**
+   - Go to **Project Settings** (Gear icon) → **API**.
+   - Copy **Project URL** (`https://xxxx.supabase.co`).
+   - Copy **service_role** secret (reveal it).
+4. **Create Storage Bucket:**
+   - Click **Storage** icon (left sidebar) → **New Bucket**.
+   - Name it `certificates`.
+   - **Toggle "Public bucket" to ON**.
+   - Click "Create bucket".
 3. **Find API Keys & URL:**
    - Go to **Project Settings** → **API**.
    - Copy **Project URL** (`https://xxxx.supabase.co`).
