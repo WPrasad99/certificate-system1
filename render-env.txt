@@ -1,0 +1,33 @@
+# ----------------------------------------------------
+# RENDER ENVIRONMENT VARIABLES
+# Copy and paste these into Render dashboard
+# ----------------------------------------------------
+
+# Database Connection (JDBC Format for Spring Boot)
+# Note: We use the raw JDBC URL format + user/pass variables to avoid special character issues in the URL
+SPRING_DATASOURCE_URL=jdbc:postgresql://db.fjdpscidveqhdeoyvduv.supabase.co:5432/postgres
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=&*%%jDC$B?yxK/7
+
+# Supabase Configuration
+SUPABASE_URL=https://fjdpscidveqhdeoyvduv.supabase.co
+# IMPORTANT: The key below looks like a "Reference ID" or "Secret", not the JWT.
+# Please double check this! The correct key usually starts with "ey..."
+# Go to Settings -> API -> Project API keys -> service_role -> Reveal
+SUPABASE_SERVICE_KEY=sb_secret_Af18TjP2TtYZ_iqMqeuF7Q_g32M1sSo
+SUPABASE_BUCKET=certificates
+
+# Security & App Config
+JWT_SECRET=ccd2e145f8a9b7c3d6e5f0a1b2c3d4e5f6a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3
+CORS_ORIGINS=https://certicraft-frontend.onrender.com
+
+# Email (Update with your actual Gmail credentials)
+EMAIL_USERNAME=your.email@gmail.com
+EMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+
+# Frontend Integration
+FRONTEND_URL=https://certicraft-frontend.onrender.com
+
+# Optional: Google OAuth (If used)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
