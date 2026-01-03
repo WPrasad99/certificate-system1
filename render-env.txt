@@ -5,7 +5,7 @@
 
 # Database Connection (JDBC Format for Spring Boot)
 # Note: We use the raw JDBC URL format + user/pass variables to avoid special character issues in the URL
-SPRING_DATASOURCE_URL=jdbc:postgresql://db.fjdpscidveqhdeoyvduv.supabase.co:5432/postgres
+SPRING_DATASOURCE_URL=jdbc:postgresql://db.fjdpscidveqhdeoyvduv.supabase.co:5432/postgres?sslmode=require
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=&*%%jDC$B?yxK/7
 
