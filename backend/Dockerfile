@@ -8,6 +8,6 @@ RUN mvn clean package -DskipTests
 # Use Eclipse Temurin image for runtime (Official OpenJDK replacement)
 FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /app
-COPY --from=build /app/target/certificate-system-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/certificate-system-1.0.0.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
