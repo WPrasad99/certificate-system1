@@ -56,10 +56,25 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
+
+        // Get allowed origins from environment variable or use localhost for
+        // development
+        String allowedOriginsEnv = System.getenv("CORS_ORIGINS");
+        List<String> allowedOrigins;
+
+        if (allowedOriginsEnv != null && !allowedOriginsEnv.isEmpty()) {
+            // Production: split comma-separated origins
+            allowedOrigins = Arrays.asList(allowedOriginsEnv.split(","));
+        } else {
+            // Development: default to localhost
+            allowedOrigins = List.of("http://localhost:5173", "http://localhost:3000", "https://localhost:5173");
+        }
+
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L); // Cache preflight response for 1 hour
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

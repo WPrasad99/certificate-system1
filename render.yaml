@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: certicraft-backend
+    env: java
+    plan: free
+    buildCommand: cd backend && ./mvnw clean package -DskipTests
+    startCommand: cd backend && java -Dserver.port=$PORT -jar target/certificate-system-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: JAVA_OPTS
+        value: -Xmx512m -XX:+UseG1GC
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: EMAIL_USERNAME
+        sync: false
+      - key: EMAIL_APP_PASSWORD
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: certificates
+      - key: CORS_ORIGINS
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
