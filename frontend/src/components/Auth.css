@@ -296,9 +296,11 @@
 
 .auth-footer {
     width: 100%;
+    max-width: 380px;
     margin-top: 24px;
     font-size: 15px;
     color: #64748b;
+    text-align: center;
 }
 
 .auth-footer a {
