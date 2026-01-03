@@ -4,9 +4,24 @@
 
 ### 1. Set Up Supabase (Database + Storage)
 1. Go to [supabase.com](https://supabase.com) → Create new project
-2. Copy database credentials from Settings → Database
-3. Create storage bucket named `certificates` (make it public)
-4. Copy your project URL and service key
+   - **Note:** You will create a **Database Password** here. **Write it down!** You cannot see it again later.
+2. **Find Database Credentials:**
+   - Go to **Project Settings** (Gear icon, bottom-left) → **Database**.
+   - Scroll to **Connection parameters**.
+   - Copy **Host** (e.g., `db.abcdef.supabase.co`).
+   - Copy **User** (usually `postgres`).
+   - **Database Name** is `postgres`.
+   - **Port** is `5432`.
+   - **Connection String:** At the top of this page, under "Connection string", click "URI". It looks like: `postgresql://postgres:[YOUR-PASSWORD]@db.xxxx.supabase.co:5432/postgres`.
+3. **Find API Keys & URL:**
+   - Go to **Project Settings** → **API**.
+   - Copy **Project URL** (`https://xxxx.supabase.co`).
+   - Copy **service_role** secret (reveal it). **This is your `SUPABASE_SERVICE_KEY`.**
+4. **Create Storage Bucket:**
+   - Click **Storage** icon (left sidebar) → **New Bucket**.
+   - Name it `certificates`.
+   - **Toggle "Public bucket" to ON**.
+   - Click "Create bucket".
 
 ### 2. Prepare Environment Variables
 Create a file `render-env.txt` with these values (DO NOT COMMIT):
